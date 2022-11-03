@@ -87,7 +87,7 @@ const getLocalFiles = async (dir) => {
   return results;
 }
 
-const upload_ = async (path, server, local, storageKey, storageZone, storageEndpoint) => {
+const upload_ = async (src, path, server, local, storageKey, storageZone, storageEndpoint) => {
   for (let i = 0; i < local.length; i++) {
     let localNode = local[i];
 
@@ -101,9 +101,9 @@ const upload_ = async (path, server, local, storageKey, storageZone, storageEndp
       }
 
       if(serverNode && serverNode.dir) {
-        upload_(`${path}/${localNode.name}`, serverNode.files, localNode.files, storageKey, storageZone, storageEndpoint);
+        upload_(src, `${path}/${localNode.name}`, serverNode.files, localNode.files, storageKey, storageZone, storageEndpoint);
       } else {
-        upload_(`${path}/${localNode.name}`, [], localNode.files, storageKey, storageZone, storageEndpoint);
+        upload_(src, `${path}/${localNode.name}`, [], localNode.files, storageKey, storageZone, storageEndpoint);
       }
     } else {
       // This is a file!
@@ -120,9 +120,9 @@ const upload_ = async (path, server, local, storageKey, storageZone, storageEndp
       } else {
         core.info(`File ${localNode.name} has changed, uploading!`);
 
-        const stream = fs.createReadStream(`${path}/${localNode.name}`);
+        const stream = fs.createReadStream(`${src}/${path}/${localNode.name}`);
         const res = await fetch(
-          `https://${storageEndpoint}/${storageZone}/${dir}`,
+          `https://${storageEndpoint}/${storageZone}/${path}`,
           {
             method: "PUT",
             headers: {
@@ -154,7 +154,7 @@ const upload = async (source, storageKey, storageZone, storageEndpoint) => {
   core.info(JSON.stringify(serverTree));
   core.info(JSON.stringify(localTree));
 
-  upload_(source, serverTree, localTree, storageKey, storageZone, storageEndpoint);
+  upload_(source, "", serverTree, localTree, storageKey, storageZone, storageEndpoint);
 }
 
 const clear = async () => { core.setFailed("Clearing is not yet implemented");  return; }
