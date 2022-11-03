@@ -1,0 +1,28 @@
+name: "BunnyCDN Storage Upload"
+description: "Upload files to BunnyCDN Storage"
+
+inputs:
+  source:
+    description: "Source folder."
+    required: true
+  apiKey:
+    description: "API key."
+    required: true
+  storageZone:
+    description: "Storage zone name."
+    required: true
+  storageEndpoint:
+    description: "Storage endpoint (defaults to Falkenstein)."
+    default: "storage.bunnycdn.com"
+  pullZone:
+    description: "Pull zone name (for purging)."
+  purge:
+    description: "Enable purging the pull zone connected to the storage (if true)."
+    default: "false"
+  clear:
+    description: "Clear files in storage before uploading (if true), should be false in *most* cases."
+    default: "false"
+
+runs:
+  using: "node16"
+  main: "index.js"
