@@ -6207,6 +6207,103 @@ function removeHook(state, name, method) {
 
 /***/ }),
 
+/***/ 4820:
+/***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
+
+/*!
+ * checksum
+ * Copyright(c) 2013 Daniel D. Shaw <dshaw@dshaw.com>
+ * MIT Licensed
+ */
+
+
+/**
+ * Module dependencies
+ */
+
+var crypto = __nccwpck_require__(6113)
+  , fs = __nccwpck_require__(7147)
+
+/**
+ * Exports
+ */
+
+module.exports = checksum
+checksum.file = checksumFile
+
+/**
+ * Checksum
+ */
+
+function checksum (value, options) {
+  options || (options = {})
+  if (!options.algorithm) options.algorithm = 'sha1'
+
+  var hash = crypto.createHash(options.algorithm)
+
+  // http://nodejs.org/api/crypto.html#crypto_crypto_createhash_algorithm
+  if (!hash.write) { 
+    // pre-streaming crypto API in node < v0.9
+    hash.update(value)
+    return hash.digest('hex')
+
+  } else {
+    // v0.9+ streaming crypto
+    // http://nodejs.org/api/stream.html#stream_writable_write_chunk_encoding_callback
+    hash.write(value)
+    return hash.digest('hex')
+
+  }
+}
+
+/**
+ * Checksum File
+ */
+
+function checksumFile (filename, options, callback) {
+  if (typeof options === 'function') {
+    callback = options
+    options = {}
+  }
+
+  options || (options = {})
+  if (!options.algorithm) options.algorithm = 'sha1'
+
+  fs.stat(filename, function (err, stat) {
+    if (!err && !stat.isFile()) err = new Error('Not a file')
+    if (err) return callback(err)
+    
+    
+    var hash = crypto.createHash(options.algorithm)
+      , fileStream = fs.createReadStream(filename)
+
+    if (!hash.write) { // pre-streaming crypto API in node < v0.9
+
+      fileStream.on('data', function (data) {
+        hash.update(data)
+      })
+
+      fileStream.on('end', function () {
+        callback(null, hash.digest('hex'))
+      })
+
+    } else { // v0.9+ streaming crypto
+
+      hash.setEncoding('hex')
+      fileStream.pipe(hash, { end: false })
+
+      fileStream.on('end', function () {
+        hash.end()
+        callback(null, hash.read())
+      })
+
+    }
+  })
+}
+
+
+/***/ }),
+
 /***/ 8362:
 /***/ ((__unused_webpack_module, exports) => {
 
@@ -16699,9 +16796,15 @@ function fixResponseChunkedTransferBadEnding(request, errorCallback) {
 
 // EXTERNAL MODULE: external "fs"
 var external_fs_ = __nccwpck_require__(7147);
+;// CONCATENATED MODULE: external "node:fs/promises"
+const promises_namespaceObject = __WEBPACK_EXTERNAL_createRequire(import.meta.url)("node:fs/promises");
 // EXTERNAL MODULE: external "path"
 var external_path_ = __nccwpck_require__(1017);
+// EXTERNAL MODULE: ./node_modules/checksum/checksum.js
+var checksum = __nccwpck_require__(4820);
 ;// CONCATENATED MODULE: ./index.js
+
+
 
 
 
@@ -16745,7 +16848,6 @@ const getFiles = async (dir, storageKey, storageZone, storageEndpoint) => {
     }
   );
   res = await res.json();
-  core.debug(res);
 
   let results = [];
   core.debug(`In directory ${dir}`);
@@ -16755,10 +16857,33 @@ const getFiles = async (dir, storageKey, storageZone, storageEndpoint) => {
       core.debug(`Found directory ${i["ObjectName"]}`);
 
       const dirFiles = await getFiles(`${dir}/${i["ObjectName"]}/`, storageKey, storageZone, storageEndpoint);
-      results.push({dir: true, files: dirFiles});
+      results.push({dir: true, name: i["ObjectName"], files: dirFiles});
     } else {
       core.debug(`Found file ${i["ObjectName"]} with checksum "${i["Checksum"]}"`);
-      results.push({dir: false, filename: i["ObjectName"], checksum: i["Checksum"]});
+      results.push({dir: false, name: i["ObjectName"], checksum: i["Checksum"]});
+    }
+  }
+  return results;
+}
+
+const getLocalFiles = async (dir) => {
+  let f = await promises_namespaceObject.readdir(dir, { withFileTypes: true });
+
+  let results = [];
+  core.debug(`In local directory ${dir}`);
+  for(let i = 0; i < f.length; i++) {
+    let node = f[i];
+
+    if(node.isDirectory()) {
+      core.debug(`Found local directory ${node.name}`);
+      results.push(getLocalFiles(`${dir}/${node.name}/`));
+    } else if(node.isFile()) {
+      let c = (0,checksum.checksum)(`${dir}/${node.name}`, { algorithm: "sha256" });
+      core.debug(`Found local file ${node.name} with checksum "${c}"`);
+
+      results.push({dir: false, name: node.name, checksum: c});
+    } else {
+      core.info(`Non-regular file found: ${node.name}`);
     }
   }
   return results;
@@ -16771,7 +16896,7 @@ const upload = async (source, storageKey, storageZone, storageEndpoint) => {
   const readStream = external_fs_.createReadStream(source);
 
   let serverTree = await getFiles("", storageKey, storageZone, storageEndpoint);
-  core.info(serverTree);
+  let localTree = await getLocalFiles(source);
 }
 
 const clear = async () => { core.setFailed("Clearing is not yet implemented");  return; }

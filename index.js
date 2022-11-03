@@ -2,7 +2,9 @@ import * as core from "@actions/core";
 import * as github from "@actions/github";
 import fetch from "node-fetch";
 import fs from "fs";
+import * as asyncfs from "node:fs/promises";
 import { join } from "path";
+import { checksum } from "checksum";
 
 const run = async () => {
   try {
@@ -41,7 +43,6 @@ const getFiles = async (dir, storageKey, storageZone, storageEndpoint) => {
     }
   );
   res = await res.json();
-  core.debug(res);
 
   let results = [];
   core.debug(`In directory ${dir}`);
@@ -51,10 +52,33 @@ const getFiles = async (dir, storageKey, storageZone, storageEndpoint) => {
       core.debug(`Found directory ${i["ObjectName"]}`);
 
       const dirFiles = await getFiles(`${dir}/${i["ObjectName"]}/`, storageKey, storageZone, storageEndpoint);
-      results.push({dir: true, files: dirFiles});
+      results.push({dir: true, name: i["ObjectName"], files: dirFiles});
     } else {
       core.debug(`Found file ${i["ObjectName"]} with checksum "${i["Checksum"]}"`);
-      results.push({dir: false, filename: i["ObjectName"], checksum: i["Checksum"]});
+      results.push({dir: false, name: i["ObjectName"], checksum: i["Checksum"]});
+    }
+  }
+  return results;
+}
+
+const getLocalFiles = async (dir) => {
+  let f = await asyncfs.readdir(dir, { withFileTypes: true });
+
+  let results = [];
+  core.debug(`In local directory ${dir}`);
+  for(let i = 0; i < f.length; i++) {
+    let node = f[i];
+
+    if(node.isDirectory()) {
+      core.debug(`Found local directory ${node.name}`);
+      results.push(getLocalFiles(`${dir}/${node.name}/`));
+    } else if(node.isFile()) {
+      let c = checksum(`${dir}/${node.name}`, { algorithm: "sha256" });
+      core.debug(`Found local file ${node.name} with checksum "${c}"`);
+
+      results.push({dir: false, name: node.name, checksum: c});
+    } else {
+      core.info(`Non-regular file found: ${node.name}`);
     }
   }
   return results;
@@ -67,7 +91,7 @@ const upload = async (source, storageKey, storageZone, storageEndpoint) => {
   const readStream = fs.createReadStream(source);
 
   let serverTree = await getFiles("", storageKey, storageZone, storageEndpoint);
-  core.info(serverTree);
+  let localTree = await getLocalFiles(source);
 }
 
 const clear = async () => { core.setFailed("Clearing is not yet implemented");  return; }
