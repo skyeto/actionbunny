@@ -16878,7 +16878,7 @@ const getLocalFiles = async (dir) => {
       core.debug(`Found local directory ${node.name}`);
       results.push(getLocalFiles(`${dir}/${node.name}/`));
     } else if(node.isFile()) {
-      let c = (0,checksum.checksum)(`${dir}/${node.name}`, { algorithm: "sha256" });
+      let c = checksum(`${dir}/${node.name}`, { algorithm: "sha256" });
       core.debug(`Found local file ${node.name} with checksum "${c}"`);
 
       results.push({dir: false, name: node.name, checksum: c});

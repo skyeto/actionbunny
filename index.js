@@ -4,7 +4,7 @@ import fetch from "node-fetch";
 import fs from "fs";
 import * as asyncfs from "node:fs/promises";
 import { join } from "path";
-import { checksum } from "checksum";
+import checksum from "checksum";
 
 const run = async () => {
   try {
