@@ -16748,12 +16748,16 @@ const getFiles = async (dir, storageKey, storageZone, storageEndpoint) => {
   core.debug(res);
 
   let results = [];
+  core.debug(`In directory ${dir}`);
   for(let a = 0; a < res.length; a++) {
     let i = res[a];
     if(i["IsDirectory"] == true) {
+      core.debug(`Found directory ${i["ObjectName"]}`);
+
       const dirFiles = await getFiles(`${dir}/${i["ObjectName"]}`, storageKey, storageZone, storageEndpoint);
       results.push({dir: true, files: dirFiles});
     } else {
+      core.debug(`Found file ${i["ObjectName"]} with checksum "${i["Checksum"]}"`);
       results.push({dir: false, filename: i["ObjectName"], checksum: i["Checksum"]});
     }
   }
