@@ -16795,6 +16795,43 @@ const getLocalFiles = async (dir) => {
   return results;
 }
 
+const upload_ = async (path, server, local, storageKey, storageZone, storageEndpoint) => {
+  for (let i = 0; i < local.length; i++) {
+    let localNode = local[i];
+
+    if(localNode.dir == true) {
+      let serverNode;
+      for(let j = 0; j < server.length; j++) {
+        if(server[j].name == localNode.name) {
+          serverNode = server[j];
+          break;
+        }
+      }
+
+      if(serverNode && serverNode.dir) {
+        upload_(`${path}/${localNode.name}`, serverNode.files, localNode.files, storageKey, storageZone, storageEndpoint);
+      } else {
+        upload_(`${path}/${localNode.name}`, [], localNode.files, storageKey, storageZone, storageEndpoint);
+      }
+    } else {
+      // This is a file!
+      let serverNode;
+      for(let j = 0; j < server.length; j++) {
+        if(server[j].name == localNode) {
+          serverNode = server[j];
+          break;
+        }
+      }
+
+      if(serverNode && serverNode.checksum == localNode.checksum) {
+        core.info(`File ${localNode.name} has not changed`);
+      } else {
+        core.info(`File ${localNode.name} has changed, uploading!`);
+      }
+    }
+  }
+}
+
 // Note: This is checking folders recursively.
 const upload = async (source, storageKey, storageZone, storageEndpoint) => { 
   core.info(`Uploading files to ${storageZone} from folder ${source}]`);
@@ -16806,6 +16843,8 @@ const upload = async (source, storageKey, storageZone, storageEndpoint) => {
 
   core.info(JSON.stringify(serverTree));
   core.info(JSON.stringify(localTree));
+
+  upload_("", serverTree, localTree, storageKey, storageZone, storageEndpoint);
 }
 
 const clear = async () => { core.setFailed("Clearing is not yet implemented");  return; }
