@@ -16748,7 +16748,8 @@ const getFiles = async (dir, storageKey, storageZone, storageEndpoint) => {
   core.debug(res);
 
   let results = [];
-  for(const i of res) {
+  for(let a = 0; a < res.length; a++) {
+    let i = res[a];
     if(i["IsDirectory"] == true) {
       const dirFiles = await getFiles(`${dir}/${i["ObjectName"]}`, storageKey, storageZone, storageEndpoint);
       results.push({dir: true, files: dirFiles});
