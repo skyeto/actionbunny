@@ -50,13 +50,14 @@ const getFiles = async (dir, storageKey, storageZone, storageEndpoint) => {
     if(i["IsDirectory"] == true) {
       core.debug(`Found directory ${i["ObjectName"]}`);
 
-      const dirFiles = await getFiles(`${dir}/${i["ObjectName"]}`, storageKey, storageZone, storageEndpoint);
+      const dirFiles = await getFiles(`${dir}/${i["ObjectName"]}/`, storageKey, storageZone, storageEndpoint);
       results.push({dir: true, files: dirFiles});
     } else {
       core.debug(`Found file ${i["ObjectName"]} with checksum "${i["Checksum"]}"`);
       results.push({dir: false, filename: i["ObjectName"], checksum: i["Checksum"]});
     }
   }
+  return results;
 }
 
 // Note: This is checking folders recursively.
