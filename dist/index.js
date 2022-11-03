@@ -16779,7 +16779,7 @@ const getLocalFiles = async (dir) => {
 
     if(node.isDirectory()) {
       core.debug(`Found local directory ${node.name}`);
-      results.push({dir: true, name: node.name, files: getLocalFiles(`${dir}/${node.name}/`)});
+      results.push({dir: true, name: node.name, files: getLocalFiles(`${dir}/${node.name}`)});
     } else if(node.isFile()) {
       const buf = external_fs_.readFileSync(`${dir}/${node.name}`);
       const c = external_crypto_.createHash("sha256").update(buf).digest("hex").toUpperCase();
