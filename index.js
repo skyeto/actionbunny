@@ -71,7 +71,8 @@ const getLocalFiles = async (dir) => {
 
     if(node.isDirectory()) {
       core.debug(`Found local directory ${node.name}`);
-      results.push({dir: true, name: node.name, files: getLocalFiles(`${dir}/${node.name}`)});
+      let files = await getLocalFiles(`${dir}/${node.name}`);
+      results.push({dir: true, name: node.name, files: files});
     } else if(node.isFile()) {
       const buf = fs.readFileSync(`${dir}/${node.name}`);
       const c = crypto.createHash("sha256").update(buf).digest("hex").toUpperCase();
