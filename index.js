@@ -41,6 +41,7 @@ const getFiles = async (dir, storageKey, storageZone, storageEndpoint) => {
     }
   );
   res = await res.json();
+  core.debug(res);
 
   let results = [];
   for(const i of res) {
