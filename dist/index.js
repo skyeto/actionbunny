@@ -16817,7 +16817,7 @@ const upload_ = async (src, path, server, local, storageKey, storageZone, storag
       // This is a file!
       let serverNode;
       for(let j = 0; j < server.length; j++) {
-        if(server[j].name == localNode) {
+        if(server[j].name == localNode.name) {
           serverNode = server[j];
           break;
         }
