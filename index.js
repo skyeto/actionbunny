@@ -31,7 +31,7 @@ const run = async () => {
 }
 
 const getFiles = async (dir, storageKey, storageZone, storageEndpoint) => {
-  const res = await fetch(
+  let res = await fetch(
     `https://${storageEndpoint}/${storageZone}/${dir}`,
     {
       method: "GET",
@@ -40,9 +40,10 @@ const getFiles = async (dir, storageKey, storageZone, storageEndpoint) => {
       }
     }
   );
+  res = await res.json();
 
   let results = [];
-  for(const i of await res.json()) {
+  for(const i of res) {
     if(i["IsDirectory"] == true) {
       const dirFiles = await getFiles(`${dir}/${i["ObjectName"]}`, storageKey, storageZone, storageEndpoint);
       results.push({dir: true, files: dirFiles});
