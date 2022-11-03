@@ -8,6 +8,9 @@ inputs:
   apiKey:
     description: "API key."
     required: true
+  storageKey:
+    description: "Storage (read-write) key"
+    required: true
   storageZone:
     description: "Storage zone name."
     required: true
