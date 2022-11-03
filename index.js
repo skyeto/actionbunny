@@ -73,10 +73,10 @@ const getLocalFiles = async (dir) => {
       core.debug(`Found local directory ${node.name}`);
       results.push(getLocalFiles(`${dir}/${node.name}/`));
     } else if(node.isFile()) {
-      core.debug(`Found local file ${node.name} with checksum "${c}"`);
-
       const buf = fs.readFileSync(`${dir}/${node.name}`);
       const c = crypto.createHash("sha256").update(buf).digest("hex");
+
+      core.debug(`Found local file ${node.name} with checksum "${c}"`);
 
       results.push({dir: false, name: node.name, checksum: c});
     } else {
