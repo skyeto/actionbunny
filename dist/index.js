@@ -16779,10 +16779,10 @@ const getLocalFiles = async (dir) => {
 
     if(node.isDirectory()) {
       core.debug(`Found local directory ${node.name}`);
-      results.push(getLocalFiles(`${dir}/${node.name}/`));
+      results.push({dir: true, name: node.name, files: getLocalFiles(`${dir}/${node.name}/`)});
     } else if(node.isFile()) {
       const buf = external_fs_.readFileSync(`${dir}/${node.name}`);
-      const c = external_crypto_.createHash("sha256").update(buf).digest("hex");
+      const c = external_crypto_.createHash("sha256").update(buf).digest("hex").toUpperCase();
 
       core.debug(`Found local file ${node.name} with checksum "${c}"`);
 
@@ -16802,6 +16802,9 @@ const upload = async (source, storageKey, storageZone, storageEndpoint) => {
 
   let serverTree = await getFiles("", storageKey, storageZone, storageEndpoint);
   let localTree = await getLocalFiles(source);
+
+  core.info(JSON.stringify(serverTree));
+  core.info(JSON.stringify(localTree));
 }
 
 const clear = async () => { core.setFailed("Clearing is not yet implemented");  return; }
