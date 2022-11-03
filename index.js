@@ -119,6 +119,24 @@ const upload_ = async (path, server, local, storageKey, storageZone, storageEndp
         core.info(`File ${localNode.name} has not changed`);
       } else {
         core.info(`File ${localNode.name} has changed, uploading!`);
+
+        const stream = fs.createReadStream(`${path}/${localNode.name}`);
+        const res = await fetch(
+          `https://${storageEndpoint}/${storageZone}/${dir}`,
+          {
+            method: "PUT",
+            headers: {
+              AccessKey: storageKey
+            },
+            body: stream
+          }
+        );
+
+        if(res.status == 201) {
+          core.info(`Successfully uploaded ${localNode.name}`);
+        } else {
+          throw new Error(`Failed to upload ${localNode.name}`);
+        }
       }
     }
   }
@@ -136,7 +154,7 @@ const upload = async (source, storageKey, storageZone, storageEndpoint) => {
   core.info(JSON.stringify(serverTree));
   core.info(JSON.stringify(localTree));
 
-  upload_("", serverTree, localTree, storageKey, storageZone, storageEndpoint);
+  upload_(source, serverTree, localTree, storageKey, storageZone, storageEndpoint);
 }
 
 const clear = async () => { core.setFailed("Clearing is not yet implemented");  return; }
