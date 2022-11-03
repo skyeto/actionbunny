@@ -16830,7 +16830,7 @@ const upload_ = async (src, path, server, local, storageKey, storageZone, storag
 
         const stream = external_fs_.createReadStream(`${src}/${path}/${localNode.name}`);
         const res = await fetch(
-          `https://${storageEndpoint}/${storageZone}/${path}`,
+          `https://${storageEndpoint}/${storageZone}/${path}/${localNode.name}`,
           {
             method: "PUT",
             headers: {
@@ -16843,7 +16843,7 @@ const upload_ = async (src, path, server, local, storageKey, storageZone, storag
         if(res.status == 201) {
           core.info(`Successfully uploaded ${localNode.name}`);
         } else {
-          throw new Error(`Failed to upload ${localNode.name}`);
+          core.setFailed(`Failed to upload ${localNode.name} to ${path}/${localNode.name}]`);
         }
       }
     }
