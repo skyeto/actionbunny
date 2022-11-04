@@ -16,3 +16,5 @@ with:
   apiKey: "${{ secrets.APIKEY }}"
 ```
 3. Set `source` to the folder you want to upload, `storageZone` to the name of your bucket, `storageKey` to the password from step 1, and `apiKey` to your BunnyCDN API key.
+
+You can find an example [here](https://github.com/skyeto/blog/blob/main/.github/workflows/main.yml).
